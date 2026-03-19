@@ -3,6 +3,7 @@ import { ScheduleEvent } from '@/types/schedule';
 import { EventCard } from './EventCard';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarDays } from 'lucide-react';
+import { timeToHours } from '@/lib/timeUtils';
 
 interface DayViewProps {
   date: Date;
@@ -12,6 +13,7 @@ interface DayViewProps {
 }
 
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
+const HOUR_HEIGHT = 70; // px per hour
 
 export function DayView({ date, events, onDeleteEvent, onEditEvent }: DayViewProps) {
   const dayStr = format(date, 'yyyy-MM-dd');
@@ -34,23 +36,49 @@ export function DayView({ date, events, onDeleteEvent, onEditEvent }: DayViewPro
       </div>
 
       <div className="max-h-[600px] overflow-y-auto scrollbar-thin">
-        {HOURS.map(hour => {
-          const hourEvents = dayEvents.filter(e => parseInt(e.startTime.split(':')[0]) === hour);
-          return (
-            <div key={hour} className="grid grid-cols-[70px_1fr] min-h-[70px] border-b border-border/30">
+        <div className="relative" style={{ height: HOURS.length * HOUR_HEIGHT }}>
+          {/* Hour grid lines */}
+          {HOURS.map((hour, i) => (
+            <div
+              key={hour}
+              className="absolute left-0 right-0 grid grid-cols-[70px_1fr] border-b border-border/30"
+              style={{ top: i * HOUR_HEIGHT, height: HOUR_HEIGHT }}
+            >
               <div className="p-2 text-xs text-muted-foreground text-right pr-3 pt-1">
                 {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
               </div>
-              <div className="border-l border-border/30 p-1 space-y-1">
-                <AnimatePresence>
-                  {hourEvents.map(event => (
-                    <EventCard key={event.id} event={event} onDelete={onDeleteEvent} onEdit={onEditEvent} />
-                  ))}
-                </AnimatePresence>
-              </div>
+              <div className="border-l border-border/30" />
             </div>
-          );
-        })}
+          ))}
+
+          {/* Events positioned absolutely */}
+          <div className="absolute left-[70px] right-0 top-0 bottom-0">
+            <AnimatePresence>
+              {dayEvents.map(event => {
+                const startH = timeToHours(event.startTime);
+                const endH = timeToHours(event.endTime);
+                const duration = Math.max(endH - startH, 0.5);
+                const topOffset = (startH - HOURS[0]) * HOUR_HEIGHT;
+                const height = duration * HOUR_HEIGHT;
+
+                return (
+                  <div
+                    key={event.id}
+                    className="absolute left-1 right-1 z-10"
+                    style={{ top: topOffset, height }}
+                  >
+                    <EventCard
+                      event={event}
+                      onDelete={onDeleteEvent}
+                      onEdit={onEditEvent}
+                      fillHeight
+                    />
+                  </div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

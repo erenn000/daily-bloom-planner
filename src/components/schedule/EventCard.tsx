@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion';
 import { MapPin, Monitor, Users, Trash2, Pencil } from 'lucide-react';
 import { ScheduleEvent, EVENT_TYPE_COLORS } from '@/types/schedule';
+import { formatTime12h } from '@/lib/timeUtils';
 
 interface EventCardProps {
   event: ScheduleEvent;
   compact?: boolean;
+  fillHeight?: boolean;
   onDelete?: (id: string) => void;
   onEdit?: (event: ScheduleEvent) => void;
   onClick?: () => void;
 }
 
-export function EventCard({ event, compact, onDelete, onEdit, onClick }: EventCardProps) {
+export function EventCard({ event, compact, fillHeight, onDelete, onEdit, onClick }: EventCardProps) {
   const typeColor = `hsl(${EVENT_TYPE_COLORS[event.type]})`;
 
   return (
@@ -21,7 +23,7 @@ export function EventCard({ event, compact, onDelete, onEdit, onClick }: EventCa
       exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ scale: 1.02 }}
       onClick={onClick}
-      className="group relative rounded-lg p-3 cursor-pointer transition-all overflow-hidden"
+      className={`group relative rounded-lg p-3 cursor-pointer transition-all overflow-hidden ${fillHeight ? 'h-full' : ''}`}
       style={{
         background: `hsl(${EVENT_TYPE_COLORS[event.type]} / 0.08)`,
         borderLeft: `3px solid ${typeColor}`,
@@ -33,7 +35,9 @@ export function EventCard({ event, compact, onDelete, onEdit, onClick }: EventCa
       />
 
       <div className="relative z-10">
-        <p className="text-[11px] text-muted-foreground">{event.startTime} - {event.endTime}</p>
+        <p className="text-[11px] text-muted-foreground">
+          {formatTime12h(event.startTime)} - {formatTime12h(event.endTime)}
+        </p>
         <h4 className="font-display font-semibold text-sm mt-0.5 text-foreground">{event.title}</h4>
         {!compact && (
           <>
