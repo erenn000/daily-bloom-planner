@@ -9,15 +9,32 @@ import { DayView } from '@/components/schedule/DayView';
 import { TodoList } from '@/components/schedule/TodoList';
 import { CreateEventDialog } from '@/components/schedule/CreateEventDialog';
 import { Button } from '@/components/ui/button';
+import { ScheduleEvent } from '@/types/schedule';
 
 const Index = () => {
   const store = useScheduleStore();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createDefaultDate, setCreateDefaultDate] = useState<Date | undefined>();
+  const [editingEvent, setEditingEvent] = useState<ScheduleEvent | undefined>();
 
   const handleDayDoubleClick = (date: Date) => {
+    setEditingEvent(undefined);
     setCreateDefaultDate(date);
     setCreateDialogOpen(true);
+  };
+
+  const handleEdit = (event: ScheduleEvent) => {
+    setEditingEvent(event);
+    setCreateDialogOpen(true);
+  };
+
+  const handleSubmit = (data: Omit<ScheduleEvent, 'id'>) => {
+    if (editingEvent) {
+      store.updateEvent(editingEvent.id, data);
+    } else {
+      store.addEvent(data);
+    }
+    setEditingEvent(undefined);
   };
 
   return (
@@ -37,7 +54,6 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* View toggle */}
               <div className="flex bg-muted/50 rounded-lg p-1">
                 <button
                   onClick={() => store.setView('week')}
@@ -54,7 +70,7 @@ const Index = () => {
               </div>
 
               <Button
-                onClick={() => { setCreateDefaultDate(undefined); setCreateDialogOpen(true); }}
+                onClick={() => { setEditingEvent(undefined); setCreateDefaultDate(undefined); setCreateDialogOpen(true); }}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-display gap-2"
               >
                 <Plus className="w-4 h-4" /> New Entry
@@ -65,7 +81,6 @@ const Index = () => {
       </header>
 
       <main className="max-w-[1440px] mx-auto px-6 py-6">
-        {/* Category tabs + week navigation */}
         <div className="flex items-center justify-between mb-6 gap-4">
           <CategoryTabs
             categories={store.categories}
@@ -98,7 +113,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           <AnimatePresence mode="wait">
             {store.view === 'week' ? (
@@ -109,6 +123,7 @@ const Index = () => {
                   selectedDate={store.selectedDate}
                   onSelectDate={store.setSelectedDate}
                   onDeleteEvent={store.deleteEvent}
+                  onEditEvent={handleEdit}
                   onDayDoubleClick={handleDayDoubleClick}
                 />
               </motion.div>
@@ -118,12 +133,12 @@ const Index = () => {
                   date={store.selectedDate}
                   events={store.filteredEvents}
                   onDeleteEvent={store.deleteEvent}
+                  onEditEvent={handleEdit}
                 />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <TodoList
               todos={store.todos}
@@ -133,7 +148,6 @@ const Index = () => {
               onDelete={store.deleteTodo}
             />
 
-            {/* Quick stats */}
             <div className="glass-card rounded-xl p-4 space-y-3">
               <h3 className="font-display font-semibold text-sm">This Week</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -158,9 +172,10 @@ const Index = () => {
 
       <CreateEventDialog
         open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSubmit={store.addEvent}
+        onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) setEditingEvent(undefined); }}
+        onSubmit={handleSubmit}
         defaultDate={createDefaultDate}
+        editEvent={editingEvent}
       />
     </div>
   );

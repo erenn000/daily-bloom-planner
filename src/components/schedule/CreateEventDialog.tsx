@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,10 @@ interface CreateEventDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (event: Omit<ScheduleEvent, 'id'>) => void;
   defaultDate?: Date;
+  editEvent?: ScheduleEvent;
 }
 
-export function CreateEventDialog({ open, onOpenChange, onSubmit, defaultDate }: CreateEventDialogProps) {
+export function CreateEventDialog({ open, onOpenChange, onSubmit, defaultDate, editEvent }: CreateEventDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(format(defaultDate || new Date(), 'yyyy-MM-dd'));
@@ -29,6 +30,26 @@ export function CreateEventDialog({ open, onOpenChange, onSubmit, defaultDate }:
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [attendeesStr, setAttendeesStr] = useState('');
 
+  useEffect(() => {
+    if (editEvent && open) {
+      setTitle(editEvent.title);
+      setDescription(editEvent.description || '');
+      setDate(editEvent.date);
+      setStartTime(editEvent.startTime);
+      setEndTime(editEvent.endTime);
+      setType(editEvent.type);
+      setIsOnline(editEvent.isOnline);
+      setLocation(editEvent.location || '');
+      setPriority(editEvent.priority);
+      setAttendeesStr(editEvent.attendees?.join(', ') || '');
+    } else if (!editEvent && open) {
+      setTitle(''); setDescription(''); setLocation(''); setAttendeesStr('');
+      setDate(format(defaultDate || new Date(), 'yyyy-MM-dd'));
+      setStartTime('09:00'); setEndTime('10:00');
+      setType('meeting'); setIsOnline(true); setPriority('medium');
+    }
+  }, [editEvent, open, defaultDate]);
+
   const handleSubmit = () => {
     if (!title.trim()) return;
     onSubmit({
@@ -38,21 +59,20 @@ export function CreateEventDialog({ open, onOpenChange, onSubmit, defaultDate }:
       location: location.trim() || undefined,
       attendees: attendeesStr ? attendeesStr.split(',').map(s => s.trim()).filter(Boolean) : undefined,
     });
-    // Reset
-    setTitle(''); setDescription(''); setLocation(''); setAttendeesStr('');
     onOpenChange(false);
   };
+
+  const isEditing = !!editEvent;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card max-w-md max-h-[90vh] overflow-y-auto scrollbar-thin">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">New Schedule Entry</DialogTitle>
+          <DialogTitle className="font-display text-xl">{isEditing ? 'Edit Entry' : 'New Schedule Entry'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
           <Input placeholder="Event title..." value={title} onChange={e => setTitle(e.target.value)} className="bg-muted/50 border-border/50 text-base font-medium" />
-
           <Textarea placeholder="Description (optional)" value={description} onChange={e => setDescription(e.target.value)} className="bg-muted/50 border-border/50 resize-none" rows={2} />
 
           <div className="grid grid-cols-2 gap-3">
@@ -119,7 +139,7 @@ export function CreateEventDialog({ open, onOpenChange, onSubmit, defaultDate }:
           </div>
 
           <Button onClick={handleSubmit} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-display">
-            Create Entry
+            {isEditing ? 'Save Changes' : 'Create Entry'}
           </Button>
         </div>
       </DialogContent>

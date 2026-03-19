@@ -1,15 +1,16 @@
 import { motion } from 'framer-motion';
-import { MapPin, Monitor, Users, Trash2 } from 'lucide-react';
+import { MapPin, Monitor, Users, Trash2, Pencil } from 'lucide-react';
 import { ScheduleEvent, EVENT_TYPE_COLORS } from '@/types/schedule';
 
 interface EventCardProps {
   event: ScheduleEvent;
   compact?: boolean;
   onDelete?: (id: string) => void;
+  onEdit?: (event: ScheduleEvent) => void;
   onClick?: () => void;
 }
 
-export function EventCard({ event, compact, onDelete, onClick }: EventCardProps) {
+export function EventCard({ event, compact, onDelete, onEdit, onClick }: EventCardProps) {
   const typeColor = `hsl(${EVENT_TYPE_COLORS[event.type]})`;
 
   return (
@@ -26,7 +27,6 @@ export function EventCard({ event, compact, onDelete, onClick }: EventCardProps)
         borderLeft: `3px solid ${typeColor}`,
       }}
     >
-      {/* Glow effect */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
         style={{ background: `radial-gradient(ellipse at top left, hsl(${EVENT_TYPE_COLORS[event.type]} / 0.12), transparent 60%)` }}
@@ -72,13 +72,25 @@ export function EventCard({ event, compact, onDelete, onClick }: EventCardProps)
         )}
       </div>
 
-      {onDelete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(event.id); }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+      {(onDelete || onEdit) && (
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+          {onEdit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(event.id); }}
+              className="text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       )}
     </motion.div>
   );

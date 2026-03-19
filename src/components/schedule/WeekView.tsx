@@ -9,12 +9,13 @@ interface WeekViewProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   onDeleteEvent: (id: string) => void;
+  onEditEvent: (event: ScheduleEvent) => void;
   onDayDoubleClick: (date: Date) => void;
 }
 
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 7); // 7 AM - 7 PM
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
 
-export function WeekView({ weekDays, events, selectedDate, onSelectDate, onDeleteEvent, onDayDoubleClick }: WeekViewProps) {
+export function WeekView({ weekDays, events, selectedDate, onSelectDate, onDeleteEvent, onEditEvent, onDayDoubleClick }: WeekViewProps) {
   const getEventsForDayAndHour = (day: Date, hour: number) => {
     const dayStr = format(day, 'yyyy-MM-dd');
     return events.filter(e => {
@@ -26,7 +27,6 @@ export function WeekView({ weekDays, events, selectedDate, onSelectDate, onDelet
 
   return (
     <div className="glass-card rounded-xl overflow-hidden">
-      {/* Header row */}
       <div className="grid grid-cols-[70px_repeat(7,1fr)] border-b border-border/50">
         <div className="p-3 text-xs text-muted-foreground text-center">GMT</div>
         {weekDays.map(day => {
@@ -48,7 +48,6 @@ export function WeekView({ weekDays, events, selectedDate, onSelectDate, onDelet
         })}
       </div>
 
-      {/* Time grid */}
       <div className="max-h-[600px] overflow-y-auto scrollbar-thin">
         {HOURS.map(hour => (
           <div key={hour} className="grid grid-cols-[70px_repeat(7,1fr)] min-h-[80px] border-b border-border/30">
@@ -66,7 +65,7 @@ export function WeekView({ weekDays, events, selectedDate, onSelectDate, onDelet
                 >
                   <AnimatePresence>
                     {dayEvents.map(event => (
-                      <EventCard key={event.id} event={event} compact onDelete={onDeleteEvent} />
+                      <EventCard key={event.id} event={event} compact onDelete={onDeleteEvent} onEdit={onEditEvent} />
                     ))}
                   </AnimatePresence>
                 </div>
