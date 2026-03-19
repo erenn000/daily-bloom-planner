@@ -8,11 +8,12 @@ interface DayViewProps {
   date: Date;
   events: ScheduleEvent[];
   onDeleteEvent: (id: string) => void;
+  onEditEvent: (event: ScheduleEvent) => void;
 }
 
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
 
-export function DayView({ date, events, onDeleteEvent }: DayViewProps) {
+export function DayView({ date, events, onDeleteEvent, onEditEvent }: DayViewProps) {
   const dayStr = format(date, 'yyyy-MM-dd');
   const dayEvents = events.filter(e => e.date === dayStr);
 
@@ -43,7 +44,7 @@ export function DayView({ date, events, onDeleteEvent }: DayViewProps) {
               <div className="border-l border-border/30 p-1 space-y-1">
                 <AnimatePresence>
                   {hourEvents.map(event => (
-                    <EventCard key={event.id} event={event} onDelete={onDeleteEvent} />
+                    <EventCard key={event.id} event={event} onDelete={onDeleteEvent} onEdit={onEditEvent} />
                   ))}
                 </AnimatePresence>
               </div>
